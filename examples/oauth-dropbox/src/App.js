@@ -1,16 +1,19 @@
 /* eslint-disable no-console */
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Redirect } from 'react-router-dom'; // eslint-disable-line
-import { createOauthFlow } from 'react-oauth-flow'; // eslint-disable-line
-import logo from './logo.svg';
-import './App.css';
+import  ClientOAuth2  from "client-oauth2"; // eslint-disable-line
+import { RequestAuthorizationCode, AuthorizationCodeCallback } from "react-oauth2-auth-code-flow"; // eslint-disable-line
+import logo from './logo.svg'; // eslint-disable-line
+import './App.css'; // eslint-disable-line
 
-const { Sender, Receiver } = createOauthFlow({
-  authorizeUrl: 'https://www.dropbox.com/oauth2/authorize',
-  tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
-  clientId: process.env.REACT_APP_DB_KEY,
-  clientSecret: process.env.REACT_APP_DB_SECRET,
-  redirectUri: 'http://localhost:3000/auth/dropbox',
+const oauthClient = new ClientOAuth2({
+  authorizationUri: "https://login.usw2.pure.cloud/oauth/authorize",
+  accessTokenUri: 'https://login.usw2.pure.cloud/oauth/token',
+  clientId: "CLIENT_D",
+  clientSecret: "client secret",
+  redirectUri: 'http://localhost:3000/auth/callback',
+  scopes: [],
+  token: 'maxc-genesys-chat'
 });
 
 class App extends Component {
@@ -24,8 +27,8 @@ class App extends Component {
   handleError = async error => {
     console.error('Error: ', error.message);
 
-    const text = await error.response.text();
-    console.log(text);
+    //const text = await error.response.text();
+    //console.log(text);
   };
 
   render() {
@@ -42,19 +45,20 @@ class App extends Component {
             path="/"
             render={() => (
               <div>
-                <Sender
+                <RequestAuthorizationCode
+                  oauthClient={oauthClient}
                   state={{ to: '/auth/success' }}
-                  render={({ url }) => <a href={url}>Connect to Dropbox</a>}
+                  render={({ url }) => <a href={url}>Connect to PureCloud</a>}
                 />
               </div>
             )}
           />
-
           <Route
             exact
-            path="/auth/dropbox"
+            path="/auth/callback"
             render={({ location }) => (
-              <Receiver
+              <AuthorizationCodeCallback
+                oauthClient={oauthClient}
                 location={location}
                 onAuthSuccess={this.handleSuccess}
                 onAuthError={this.handleError}
@@ -62,11 +66,9 @@ class App extends Component {
                   if (processing) {
                     return <p>Processing!</p>;
                   }
-
                   if (error) {
                     return <p style={{ color: 'red' }}>{error.message}</p>;
                   }
-
                   return <Redirect to={state.to} />;
                 }}
               />
@@ -76,7 +78,7 @@ class App extends Component {
           <Route
             exact
             path="/auth/success"
-            render={() => <div>Successfully authorized Dropbox!</div>}
+            render={() => <div>Successfully authorized pure cloud!</div>}
           />
         </div>
       </BrowserRouter>
